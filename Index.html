@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord OAuth2 & Bot Verification Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        discord: {
+                            bg: '#313338',
+                            dark: '#1e1f22',
+                            card: '#2b2d31',
+                            blurple: '#5865f2',
+                            green: '#23a55a',
+                            hover: '#4752c4',
+                            text: '#dbdee1',
+                            muted: '#949ba4',
+                            sidebar: '#2b2d31'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1f22;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #111214;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #35363c;
+        }
+        .glow-effect {
+            box-shadow: 0 0 25px -5px rgba(88, 101, 242, 0.35);
+        }
+        .toast-slide {
+            animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100%) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .pulse-emerald {
+            animation: pulseEmerald 2s infinite;
+        }
+        @keyframes pulseEmerald {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.15); }
+        }
+    </style>
+</head>
+<body class="bg-[#0f172a] text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-discord-blurple selection:text-white">
+
+    <header class="w-full bg-[#1e1f22]/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+            <!-- App Identity -->
+            <div class="flex items-center gap-3 shrink-0">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-discord-blurple flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <i class="fa-brands fa-discord text-2xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg leading-tight text-white flex items-center gap-2">
+                        Memberz Hub <span class="bg-discord-blurple/20 text-discord-blurple text-xs px-2 py-0.5 rounded-full font-semibold border border-discord-blurple/30">v2.4</span>
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden md:block">Discord OAuth2 Member Verification System</p>
+                </div>
+            </div>
+
+            <!-- Stats Bar (Featuring 50,000 Bots Available) -->
+            <div class="flex items-center gap-2 sm:gap-4 overflow-x-auto py-1">
+                <div class="bg-discord-dark/90 px-3 py-1.5 rounded-lg border border-slate-700/60 flex items-center gap-2 shrink-0">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 pulse-emerald"></span>
+                    <div>
+                        <p class="text-[10px] text-discord-muted uppercase tracking-wider font-semibold">Available Bots</p>
+                        <p class="text-xs font-bold text-emerald-400 font-mono">50,000 BOTS</p>
+                    </div>
+                </div>
+
+                <div class="bg-discord-dark/90 px-3 py-1.5 rounded-lg border border-slate-700/60 flex items-center gap-2 shrink-0">
+                    <i class="fa-solid fa-users text-discord-blurple text-xs"></i>
+                    <div>
+                        <p class="text-[10px] text-discord-muted uppercase tracking-wider font-semibold">Online</p>
+                        <p class="text-xs font-bold text-white font-mono">1,468 Active</p>
+                    </div>
+                </div>
+
+                <div class="bg-discord-dark/90 px-3 py-1.5 rounded-lg border border-slate-700/60 flex items-center gap-2 shrink-0 hidden sm:flex">
+                    <i class="fa-solid fa-server text-indigo-400 text-xs"></i>
+                    <div>
+                        <p class="text-[10px] text-discord-muted uppercase tracking-wider font-semibold">Tracked</p>
+                        <p class="text-xs font-bold text-white font-mono">2 Servers</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Controls -->
+            <div class="flex items-center gap-2 shrink-0">
+                <button id="reset-demo-btn" onclick="resetDemo()" class="px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span class="hidden sm:inline">Reset Demo</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        <!-- Left Panel: OAuth2 Authorization Window simulation -->
+        <section class="lg:col-span-5 flex flex-col items-center justify-center">
+            <div class="w-full max-w-md bg-[#2b2d31] rounded-2xl border border-slate-700/60 shadow-2xl overflow-hidden glow-effect transition-all duration-300">
+                
+                <!-- Discord Auth Banner -->
+                <div class="bg-gradient-to-r from-indigo-900 via-discord-blurple to-purple-800 h-24 relative p-4 flex items-end">
+                    <div class="absolute -bottom-8 left-6">
+                        <div class="relative">
+                            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=150&auto=format&fit=crop&q=80" alt="App Logo" class="w-16 h-16 rounded-full border-4 border-[#2b2d31] object-cover bg-slate-800 shadow-md">
+                            <span class="absolute bottom-0 right-0 w-4 h-4 bg-discord-green border-2 border-[#2b2d31] rounded-full" title="Online"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auth Body -->
+                <div class="pt-10 px-6 pb-6">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center gap-2">
+                            <h2 class="text-xl font-bold text-white">Memberz hub</h2>
+                            <span class="bg-discord-blurple text-white text-[10px] font-bold px-1.5 py-0.5 rounded uppercase tracking-wider">APP</span>
+                        </div>
+                        <span class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded font-mono font-bold">50,000 Bots</span>
+                    </div>
+                    <p class="text-sm text-discord-muted mb-5">wants to access your Discord account</p>
+
+                    <!-- User Account Badge -->
+                    <div class="bg-[#1e1f22] p-3 rounded-xl border border-slate-700/50 flex items-center justify-between mb-5">
+                        <div class="flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white text-xs">
+                                U
+                            </div>
+                            <div>
+                                <p class="text-xs font-semibold text-white">Logged in as</p>
+                                <p class="text-xs text-discord-muted" id="user-display-tag">user_demo#0001</p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-discord-blurple hover:underline cursor-pointer font-medium">Switch Account</span>
+                    </div>
+
+                    <!-- Server Select Option -->
+                    <div class="mb-5">
+                        <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ADD TO SERVER:</label>
+                        <select id="server-select" class="w-full bg-[#1e1f22] text-white text-sm border border-slate-700 rounded-lg p-2.5 focus:ring-2 focus:ring-discord-blurple outline-none">
+                            <option value="Memberz Hub Server">Memberz Hub Server</option>
+                            <option value="Community Guild">Community Guild</option>
+                            <option value="bA\x4re's server">bA\x4re's server</option>
+                        </select>
+                    </div>
+
+                    <!-- Permissions List -->
+                    <div class="space-y-2.5 mb-6">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">This will allow the developer to:</p>
+                        
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-check text-discord-green mt-1 text-xs"></i>
+                            <span class="text-xs sm:text-sm text-discord-text">Access your username, avatar, and banner</span>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-check text-discord-green mt-1 text-xs"></i>
+                            <span class="text-xs sm:text-sm text-discord-text">Join servers for you (Auto-member bot)</span>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-check text-discord-green mt-1 text-xs"></i>
+                            <span class="text-xs sm:text-sm text-discord-text">Read bedtime stories & verify server access</span>
+                        </div>
+                    </div>
+
+                    <!-- Auth Actions -->
+                    <div id="auth-state-initial" class="space-y-3">
+                        <p class="text-[11px] text-discord-muted text-center">
+                            Redirects to <span class="text-slate-300 font-mono">https://member-wev.vercel.app</span>
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="cancelAuth()" class="w-full py-2.5 px-4 bg-slate-700 hover:bg-slate-600 text-white font-medium text-sm rounded-lg transition-colors">
+                                Cancel
+                            </button>
+                            <button id="authorize-btn" onclick="authorizeApp()" class="w-full py-2.5 px-4 bg-discord-blurple hover:bg-discord-hover text-white font-medium text-sm rounded-lg transition-all shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2">
+                                <span>Authorize</span>
+                                <i class="fa-solid fa-arrow-right text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="auth-state-complete" class="hidden space-y-4">
+                        <div class="p-3.5 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-center">
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-2xl mb-1"></i>
+                            <h3 class="font-bold text-white text-sm">Authorization Granted!</h3>
+                            <p class="text-xs text-slate-300">50,000 bots are ready for deployment.</p>
+                        </div>
+
+                        <!-- Generated Code Box -->
+                        <div class="bg-[#1e1f22] p-3 rounded-xl border border-slate-700 flex items-center justify-between gap-2">
+                            <code id="auth-code-value" class="text-xs font-mono text-emerald-400 truncate tracking-wider font-semibold">
+                                jUgSOQW6g5vC9gDnYosQVRB5P3umSV
+                            </code>
+                            <button onclick="copyAuthCode()" class="px-3 py-1.5 bg-discord-blurple hover:bg-discord-hover text-white rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors shrink-0">
+                                <i class="fa-regular fa-copy"></i>
+                                <span>Copy Code</span>
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- Right Panel: Interactive Discord Chat Simulator -->
+        <section class="lg:col-span-7 flex flex-col h-[680px] bg-discord-bg rounded-2xl border border-slate-700/60 shadow-2xl overflow-hidden">
+            
+            <!-- Discord Workspace Sub-header -->
+            <div class="bg-discord-dark px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-lg bg-discord-blurple flex items-center justify-center font-bold text-white text-xs">
+                        MH
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-white text-sm flex items-center gap-2">
+                            Memberz Hub
+                            <i class="fa-solid fa-circle-check text-discord-blurple text-xs"></i>
+                        </h3>
+                        <p class="text-[11px] text-discord-muted">50,000 Bots Loaded • #authorise-here</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <span class="hidden sm:inline-flex bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full font-mono font-medium border border-emerald-500/30">
+                        <i class="fa-solid fa-robot mr-1.5 mt-0.5"></i> 50k Bots Online
+                    </span>
+                </div>
+            </div>
+
+            <!-- Discord Channel Layout Grid -->
+            <div class="flex-1 flex overflow-hidden">
+                
+                <!-- Sidebar Channel List -->
+                <div class="w-48 bg-discord-sidebar border-r border-slate-800/80 p-3 hidden sm:flex flex-col gap-1 shrink-0 text-xs text-discord-muted">
+                    <div class="font-semibold text-[10px] uppercase tracking-wider text-slate-400 mb-1 px-2">Growth & Auth</div>
+                    <a href="#" class="bg-slate-700/50 text-white font-medium px-2 py-1.5 rounded flex items-center gap-2">
+                        <i class="fa-solid fa-hashtag text-slate-400"></i> authorise-here
+                    </a>
+                    <a href="#" class="hover:bg-slate-800 hover:text-slate-200 px-2 py-1.5 rounded flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-hashtag text-slate-400"></i> f4rm-here
+                    </a>
+                    <a href="#" class="hover:bg-slate-800 hover:text-slate-200 px-2 py-1.5 rounded flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-hashtag text-slate-400"></i> bot-status
+                    </a>
+                    <a href="#" class="hover:bg-slate-800 hover:text-slate-200 px-2 py-1.5 rounded flex items-center gap-2 transition-colors">
+                        <i class="fa-solid fa-hashtag text-slate-400"></i> restocker
+                    </a>
+
+                    <div class="font-semibold text-[10px] uppercase tracking-wider text-slate-400 mt-4 mb-1 px-2">Bot Statistics</div>
+                    <div class="px-2 py-1 text-[11px] bg-discord-dark/50 rounded border border-slate-800 space-y-1">
+                        <div class="flex justify-between"><span>Pool:</span> <span class="text-emerald-400 font-mono font-semibold">50,000</span></div>
+                        <div class="flex justify-between"><span>Online:</span> <span class="text-white font-mono">1,468</span></div>
+                        <div class="flex justify-between"><span>Status:</span> <span class="text-discord-green font-semibold">Ready</span></div>
+                    </div>
+                </div>
+
+                <!-- Chat Area -->
+                <div class="flex-1 flex flex-col bg-discord-bg">
+                    
+                    <!-- Chat Messages Area -->
+                    <div id="chat-messages" class="flex-1 p-4 overflow-y-auto space-y-4">
+                        
+                        <!-- Header embed card in Discord -->
+                        <div class="p-3.5 bg-discord-card/80 rounded-xl border border-slate-700/50">
+                            <div class="flex items-center gap-2 text-emerald-400 font-bold text-xs mb-1">
+                                <i class="fa-solid fa-robot"></i> BOT POOL ACTIVE (50,000 BOTS AVAILABLE)
+                            </div>
+                            <p class="text-xs text-discord-text leading-relaxed">
+                                System operational. Connect your account using OAuth2 to verify and unlock full features.
+                            </p>
+                        </div>
+
+                        <!-- System bot initial message -->
+                        <div class="flex items-start gap-3 group">
+                            <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=80&auto=format&fit=crop&q=80" class="w-9 h-9 rounded-full border border-slate-700 shrink-0">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-semibold text-white text-xs sm:text-sm">Memberz hub</span>
+                                    <span class="bg-discord-blurple text-white text-[9px] font-bold px-1 rounded uppercase">APP</span>
+                                    <span class="text-[10px] text-discord-muted">Today at 4:20 PM</span>
+                                </div>
+                                
+                                <!-- Embed Card -->
+                                <div class="mt-2 bg-discord-dark border-l-4 border-discord-blurple p-3 rounded-r-lg max-w-md">
+                                    <div class="flex items-center gap-1.5 text-amber-400 font-bold text-xs mb-1">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> IMPORTANT
+                                    </div>
+                                    <p class="text-xs text-slate-200 font-medium">Codes expire in 10 minutes! Complete authentication quickly.</p>
+                                    
+                                    <div class="mt-3 space-y-2 text-xs">
+                                        <p class="font-semibold flex items-center gap-1 text-white">
+                                            <i class="fa-solid fa-link text-discord-blurple"></i> Auth Link
+                                        </p>
+                                        <button onclick="focusAuthButton()" class="text-discord-blurple hover:underline font-semibold text-xs flex items-center gap-1">
+                                            👉 CLICK HERE TO AUTHENTICATE 👈
+                                        </button>
+                                        <div class="pt-2 border-t border-slate-800 text-[11px] text-discord-muted flex justify-between">
+                                            <spa
